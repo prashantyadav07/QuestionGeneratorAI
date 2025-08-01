@@ -1,6 +1,4 @@
-// src/components/layout/Footer.jsx
 import { Heart, Github, Linkedin, Mail, ArrowUp } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 const Footer = () => {
     const currentYear = new Date().getFullYear();
@@ -9,22 +7,21 @@ const Footer = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // CAMBIO: Lista de enlaces simplificada y URL de LinkedIn actualizada.
+    // FIXED: Email URL corrected with mailto: prefix
     const socialLinks = [
         { icon: Github, href: "https://github.com/prashantyadav07", label: "GitHub" },
         { icon: Linkedin, href: "https://www.linkedin.com/in/prashant-yadav-83a94a2ab/", label: "LinkedIn" },
-        { icon: Mail, href: "prashant9407@gmail.com", label: "Email" }
+        { icon: Mail, href: "mailto:prashant9407@gmail.com", label: "Email" }
     ];
 
     return (
-        // CAMBIO: Fondo y borde actualizados para coincidir con el tema oscuro/púrpura.
+        // SAME THEME: Dark purple background with purple borders
         <footer className="w-full bg-[#110D22] text-white mt-20 border-t border-purple-500/20">
             <div className="container mx-auto px-4 sm:px-6 py-8">
                 
-                {/* CAMBIO: Contenido principal simplificado a una sola fila con flexbox. */}
                 <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-8">
                     
-                    {/* Sección de la marca y descripción corta */}
+                    {/* Brand section with same gradient */}
                     <div>
                         <h3 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-3">
                             Notes2Test.AI
@@ -34,49 +31,52 @@ const Footer = () => {
                         </p>
                     </div>
 
-                    {/* Enlaces a redes sociales con estilo actualizado */}
+                    {/* FIXED: Social links with glassmorphism effect */}
                     <div className="flex gap-4">
                         {socialLinks.map((social) => (
-                            <motion.a
+                            <a
                                 key={social.label}
                                 href={social.href}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                // CAMBIO: Estilo de ícono actualizado para un aspecto de cristal.
-                                className="p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-200 group"
+                                className="p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-200 group hover:scale-110 hover:-translate-y-1 active:scale-95"
                                 title={social.label}
-                                whileHover={{ scale: 1.15 }}
-                                whileTap={{ scale: 0.95 }}
                             >
-                                <social.icon size={20} className="text-gray-300 group-hover:text-white" />
-                            </motion.a>
+                                <social.icon size={20} className="text-gray-300 group-hover:text-white transition-colors duration-200" />
+                            </a>
                         ))}
                     </div>
                 </div>
 
-                {/* Barra inferior */}
+                {/* Bottom bar with same theme colors */}
                 <div className="pt-6 border-t border-purple-500/20 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    {/* CAMBIO: Texto de atribución y copyright simplificado. */}
                     <div className="text-sm text-gray-400 text-center sm:text-left">
                         <span>© {currentYear} Notes2Test.AI</span>
                         <span className="mx-2">•</span>
-                        <span>Made with <Heart size={14} className="inline text-red-400" /> by <a href="https://www.linkedin.com/in/prashant-yadav-83a94a2ab/" target="_blank" rel="noopener noreferrer" className="font-semibold text-indigo-400 hover:underline">Prashant Yadav</a></span>
+                        <span>Made with <Heart size={14} className="inline text-red-400" /> by 
+                            <a 
+                                href="https://www.linkedin.com/in/prashant-yadav-83a94a2ab/" 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="font-semibold text-indigo-400 hover:text-indigo-300 hover:underline ml-1 transition-colors duration-200"
+                            >
+                                Prashant Yadav
+                            </a>
+                        </span>
                     </div>
 
-                    <motion.button
+                    {/* FIXED: Back to top button with same gradient theme */}
+                    <button
                         onClick={scrollToTop}
-                        // CAMBIO: Botón "Back to Top" con degradado y sombra del tema.
-                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg text-sm font-medium shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 transition-all duration-200"
-                        whileHover={{ scale: 1.05, y: -2 }}
-                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg text-sm font-medium shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 hover:scale-105 hover:-translate-y-1 active:scale-95 transition-all duration-200"
                     >
                         <ArrowUp size={16} />
                         Back to Top
-                    </motion.button>
+                    </button>
                 </div>
             </div>
 
-            {/* Borde decorativo inferior con el degradado del tema */}
+            {/* Same decorative bottom border with theme gradient */}
             <div className="h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
         </footer>
     );
