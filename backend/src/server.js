@@ -44,7 +44,7 @@ connectDB();
 
 // Sirf is URL se aane waali requests ko allow karo
 const corsOptions = {
-    origin: 'https://notes2testai.netlify.app/',
+    origin: 'https://notes2testai.netlify.app',
     optionsSuccessStatus: 200
 };
 
