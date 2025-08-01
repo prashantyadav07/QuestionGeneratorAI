@@ -77,7 +77,7 @@ const Home = () => {
                             className="text-5xl md:text-7xl font-bold mb-6"
                         >
                             <span className="bg-gradient-to-r from-violet-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-                                Quiz Master
+                               Notes2test.AI
                             </span>
                         </motion.h1>
 
