@@ -1,0 +1,13 @@
+# 🔐 Ignore env files from both frontend and backend
+frontend/.env
+frontend/.env.local
+
+backend/.env
+backend/.env.local
+
+# 💻 Optional: OS files
+.DS_Store
+Thumbs.db
+
+# 🔧 Optional: Editor config folders
+.vscode/
