@@ -1,13 +1,10 @@
-// ==========================================================
-// ##                                                      ##
-// ##      FINAL DYNAMIC CODE FOR PDF CONTROLLER (PROD)      ##
-// ##                                                      ##
-// ==========================================================
+// backend/src/controllers/pdfController.js
 
 import { extractTextFromPDF } from '../services/pdfParser.js';
 import { generateQuestions } from '../services/aiService.js';
 import Topic from '../models/Topic.js';
 import Question from '../models/Question.js';
+// Nayi utility import karo
 import { splitTextIntoChunks } from '../utils/textChunker.js';
 
 export const handlePDFUpload = async (req, res) => {
@@ -16,49 +13,51 @@ export const handlePDFUpload = async (req, res) => {
   }
 
   try {
-    // User se question count lo, agar nahi diya toh default 10 le lo
     const requestedCount = parseInt(req.body.questionCount) || 10;
-
     const pdfBuffer = req.file.buffer;
     const extractedText = await extractTextFromPDF(pdfBuffer);
+    
     if (!extractedText || extractedText.trim() === '') {
       return res.status(400).json({ success: false, message: 'Could not extract text from PDF.' });
     }
 
+    // PDF text ko chhote chunks mein todo
     const textChunks = splitTextIntoChunks(extractedText, 4000);
-    const countPerChunk = requestedCount / textChunks.length;
+    
+    // Har chunk se kitne questions generate karne hain
+    const countPerChunk = Math.ceil(requestedCount / textChunks.length);
 
-    // Har chunk ke liye user ka bataya hua count bhejo
-    const generationResults = await Promise.allSettled(
-      textChunks.map(chunk => generateQuestions(chunk, countPerChunk))
+    // Promise.allSettled se saare chunks ke liye parallel requests bhejo
+    const generationPromises = textChunks.map(chunk => 
+      generateQuestions(chunk, countPerChunk)
     );
+    const results = await Promise.allSettled(generationPromises);
 
     let combinedQuestions = [];
     let successfulChunks = 0;
 
-    generationResults.forEach(result => {
-        if (result.status === 'fulfilled' && result.value && result.value.questions) {
+    // Saare successful results ke questions ko combine karo
+    results.forEach(result => {
+        if (result.status === 'fulfilled' && result.value?.questions) {
             combinedQuestions = combinedQuestions.concat(result.value.questions);
             successfulChunks++;
         } else if (result.status === 'rejected') {
+            // Agar koi chunk fail hota hai, to hum console mein warning denge, lekin crash nahi honge
             console.warn("A chunk failed to generate questions:", result.reason?.message || 'Unknown reason');
         }
     });
 
     if (successfulChunks === 0) {
-        throw new Error("Failed to generate questions from any part of the document.");
+        throw new Error("Failed to generate questions from any part of the document. The PDF might be unsuitable.");
     }
 
     // FINAL SAFETY FILTER: Sirf valid questions ko hi rakho
-    const validQuestions = combinedQuestions.filter(q => {
-        const hasAnswer = q && q.answer && typeof q.answer === 'string' && q.answer.trim() !== '';
-        if (q.type === 'mcq') {
-            return hasAnswer && Array.isArray(q.options) && q.options.length > 0;
-        }
-        return hasAnswer;
-    });
+    const validQuestions = combinedQuestions.filter(q => 
+        q && q.type === 'mcq' && q.questionText && q.answer && Array.isArray(q.options) && q.options.length > 0
+    );
 
-    const firstSuccessfulResult = generationResults.find(r => r.status === 'fulfilled')?.value;
+    // Kisi bhi ek successful result se topic info le lo
+    const firstSuccessfulResult = results.find(r => r.status === 'fulfilled')?.value;
     const mainTopicInfo = firstSuccessfulResult?.topic || { title: 'Generated Test', description: 'Questions from PDF' };
     
     const newTopic = new Topic({
@@ -66,21 +65,16 @@ export const handlePDFUpload = async (req, res) => {
       description: mainTopicInfo.description,
     });
     const savedTopic = await newTopic.save();
-    const topicId = savedTopic._id;
     
     const questionsToSave = validQuestions.map(q => ({
-      type: q.type,
-      questionText: q.questionText,
-      options: q.options || [],
-      answer: q.answer,
-      explanation: q.explanation || 'No explanation was provided.',
-      topic: topicId,
+      ...q,
+      topic: savedTopic._id,
     }));
 
     if (questionsToSave.length === 0) {
       return res.status(500).json({ 
           success: false, 
-          message: 'The AI generated some questions, but none of them were valid (missing answer or options for MCQs).' 
+          message: 'AI could not generate any valid questions from the provided document.' 
       });
     }
 
@@ -88,7 +82,7 @@ export const handlePDFUpload = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: `Test created successfully! Saved ${savedQuestions.length} valid questions.`,
+      message: `Test created! AI generated ${savedQuestions.length} valid questions.`,
       data: {
         topic: savedTopic,
         questions: savedQuestions,
@@ -96,11 +90,10 @@ export const handlePDFUpload = async (req, res) => {
     });
     
   } catch (error) {
-    console.error("Critical PDF Upload & Processing Error:", error);
+    console.error("Critical PDF Processing Error:", error);
     res.status(500).json({
       success: false,
-      message: 'A critical error occurred while processing your request.',
-      error: error.message
+      message: error.message || 'A critical error occurred while processing your request.',
     });
   }
 };

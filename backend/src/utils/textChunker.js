@@ -1,5 +1,7 @@
+// backend/src/utils/textChunker.js
+
 /**
- * Ek bade text ko chote-chote tukdon (chunks) mein todta hai.
+ * Ek bade text ko AI ke liye aasan, chote-chote tukdon (chunks) mein todta hai.
  * @param {string} text - Poora text jo todna hai.
  * @param {number} maxChunkSize - Har chunk ka maximum size (characters mein).
  * @returns {string[]} - Chunks ka ek array.
