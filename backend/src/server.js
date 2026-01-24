@@ -39,23 +39,20 @@ connectDB();
 // ==========================================================
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://notes2testai.netlify.app',
-  'https://notes2testai.netlify.app/',
-  'https://notes2testai.netlify.app/login'
+  'https://notes2testai.netlify.app'
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Postman / server-side calls
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('CORS not allowed ❌'));
     }
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200
 };
 
