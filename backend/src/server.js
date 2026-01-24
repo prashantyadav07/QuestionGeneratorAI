@@ -39,7 +39,9 @@ connectDB();
 // ==========================================================
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://notes2testai.netlify.app'
+  'https://notes2testai.netlify.app',
+  'https://notes2testai.netlify.app/',
+  'https://notes2testai.netlify.app/login'
 ];
 
 const corsOptions = {
