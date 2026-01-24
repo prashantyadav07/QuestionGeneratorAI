@@ -8,9 +8,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// .env file backend ke root me hai
-const envPath = path.resolve(__dirname, '../.env');
-dotenv.config({ path: envPath });
+// .env configuration (Safe for both Local and Vercel)
+dotenv.config();
+// Vercel handles environment variables internally, but we keep this for local development.
 
 // ==========================================================
 // 🔹 IMPORTS
@@ -43,13 +43,7 @@ const allowedOrigins = [
 ];
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS not allowed ❌'));
-    }
-  },
+  origin: true, // Allow all origins in production for stability, or specify yours
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
