@@ -2,190 +2,226 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
-import { BookOpen, Brain, Zap, ArrowRight, Play, Upload, CheckCircle } from 'lucide-react';
-
-// Imports for the 3D background animation
-import { useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Points, PointMaterial } from '@react-three/drei';
-
-// --- 3D Background Animation Component (Optimized) ---
-const Background3D = () => {
-    const ref = useRef();
-    // Reduced particle count slightly for better performance
-    const positions = new Float32Array(4000 * 3).map(() => (Math.random() - 0.5) * 8);
-
-    useFrame((state, delta) => {
-        if (ref.current) {
-            ref.current.rotation.x += delta / 20;
-            ref.current.rotation.y += delta / 25;
-        }
-    });
-
-    return (
-        <group rotation={[0, 0, Math.PI / 4]}>
-            <Points ref={ref} positions={positions} stride={3} frustumCulled={false}>
-                <PointMaterial
-                    transparent
-                    color="#a855f7" 
-                    size={0.015}
-                    sizeAttenuation={true}
-                    depthWrite={false}
-                />
-            </Points>
-        </group>
-    );
-};
-// --- End of 3D Background Component ---
-
+import { 
+    ArrowRight, Upload, CheckCircle, Zap, 
+    Target, BarChart3, ShieldCheck, Sparkles, 
+    MousePointer2, BookOpen 
+} from 'lucide-react';
+import DisplayCards from '../components/ui/display-cards';
 
 const Home = () => {
     const { user } = useAuth();
 
-    // Animation variants for sections that load once
-    const sectionVariants = {
-        hidden: { opacity: 0, y: 30 },
-        visible: (delay = 0) => ({
-            opacity: 1,
-            y: 0,
-            transition: { duration: 0.8, delay }
-        })
+    // Subtle entrance animation
+    const fadeInUp = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }
     };
 
     return (
-        // The main wrapper with a solid dark background
-        <div className="relative w-full overflow-x-hidden bg-[#0a0518] text-white">
-            
-            {/* 3D background is fixed to cover the entire page and runs smoothly */}
-            <div className="fixed top-0 left-0 w-full h-screen z-0 pointer-events-none">
-                 <Canvas camera={{ position: [0, 0, 1.5] }}>
-                    <Background3D />
-                </Canvas>
-            </div>
+        <div className="relative w-full overflow-x-hidden bg-white text-slate-900">
+            {/* --- 1. MINIMAL HERO SECTION --- */}
+            <section className="relative min-h-[85vh] flex items-center justify-center pt-24 pb-12 px-6 overflow-hidden">
+                {/* Background Accent */}
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <div className="absolute top-[-10%] left-[-5%] w-[400px] h-[400px] bg-indigo-50/50 rounded-full blur-[100px]" />
+                    <div className="absolute bottom-10 right-[-5%] w-[300px] h-[300px] bg-purple-50/50 rounded-full blur-[80px]" />
+                </div>
 
-            {/* All page content is in a `main` tag, on top of the animation */}
-            <main className="relative z-10">
+                <div className="relative z-10 max-w-5xl mx-auto text-center">
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-500 text-[11px] font-bold uppercase tracking-[0.15em] mb-8"
+                    >
+                        <Sparkles size={12} className="text-indigo-500" /> 
+                        Next-Gen Learning Platform
+                    </motion.div>
 
-                {/* Hero Section */}
-                <section className="flex items-center justify-center min-h-screen px-4 pt-24 pb-12">
-                    <div className="text-center max-w-5xl mx-auto">
-                        
-                        <motion.h1
-                            variants={sectionVariants}
-                            initial="hidden"
-                            animate="visible"
-                            className="text-5xl md:text-7xl font-bold mb-6"
+                    <motion.h1 
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.1] mb-6 text-slate-900"
+                    >
+                        Master Your Material <br className="hidden md:block" />
+                        <span className="text-indigo-600">Generated by AI.</span>
+                    </motion.h1>
+
+                    <motion.p 
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-base md:text-lg text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed"
+                    >
+                        Convert your lecture notes and PDFs into professional-grade practice tests in seconds. Optimized for medical, law, and tech students.
+                    </motion.p>
+
+                    <motion.div 
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="flex flex-col sm:flex-row items-center justify-center gap-5"
+                    >
+                        <Link
+                            to={user ? '/upload' : '/login'}
+                            className="group flex items-center gap-2 px-8 py-3.5 bg-indigo-600 text-white rounded-xl font-bold text-base transition-all hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 active:scale-95"
                         >
-                            <span className="bg-gradient-to-r from-violet-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-                               Notes2test.AI
-                            </span>
-                        </motion.h1>
+                            {user ? 'Go to Dashboard' : 'Get Started Now'}
+                            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                        </Link>
+                        <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
+                            <ShieldCheck size={16} className="text-emerald-500" /> 
+                            No credit card required
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
 
-                        <motion.p
-                            variants={sectionVariants}
-                            initial="hidden"
-                            animate={sectionVariants.visible(0.2)}
-                            className="text-xl md:text-2xl text-slate-300 mb-10 max-w-3xl mx-auto leading-relaxed"
-                        >
-                            Transform your PDF documents into intelligent quizzes. 
-                            <br className="hidden md:block" />
-                            Learn smarter, test better, achieve more.
-                        </motion.p>
-
-                        <motion.div
-                             variants={sectionVariants}
-                             initial="hidden"
-                             animate={sectionVariants.visible(0.4)}
-                            className="flex flex-col md:flex-row gap-6 mb-12 max-w-4xl mx-auto"
-                        >
-                            {[
-                                { icon: Upload, title: "Upload PDF", desc: "Drag & drop your documents", color: "from-violet-500 to-purple-500" },
-                                { icon: Brain, title: "AI Processing", desc: "Smart content analysis", color: "from-blue-500 to-cyan-500" },
-                                { icon: CheckCircle, title: "Take Quiz", desc: "Test your knowledge", color: "from-green-500 to-emerald-500" }
-                            ].map((feature) => (
-                                <motion.div
-                                    key={feature.title}
-                                    whileHover={{ scale: 1.05, y: -5 }}
-                                    className="flex-1 p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:border-white/20 transition-all duration-300"
-                                >
-                                    <div className={`w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-r ${feature.color} flex items-center justify-center`}>
-                                        <feature.icon className="w-6 h-6 text-white" />
-                                    </div>
-                                    <h3 className="text-lg font-semibold mb-2 text-white">{feature.title}</h3>
-                                    <p className="text-slate-400 text-sm">{feature.desc}</p>
-                                </motion.div>
-                            ))}
-                        </motion.div>
-
-                        <motion.div
-                             variants={sectionVariants}
-                             initial="hidden"
-                             animate={sectionVariants.visible(0.6)}
-                        >
-                            <Link
-                                to={user ? '/upload' : '/login'}
-                                className="group inline-flex items-center gap-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold text-lg py-4 px-8 rounded-full shadow-2xl shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-300 transform hover:scale-105"
-                            >
-                                <Play className="w-5 h-5" />
-                                <span>Start Creating Quizzes</span>
-                            </Link>
-                        </motion.div>
+            {/* --- 2. HOW IT WORKS --- */}
+            <section className="py-24 bg-slate-50/50 border-y border-slate-100">
+                <div className="max-w-6xl mx-auto px-6">
+                    <div className="text-center mb-16">
+                        <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 mb-3">
+                            Simple Workflow
+                        </h2>
+                        <div className="h-1 w-12 bg-indigo-600 mx-auto rounded-full" />
                     </div>
-                </section>
 
-                {/* All remaining content is grouped together with proper spacing */}
-                <section className="py-20 px-4">
-                    <div className="max-w-4xl mx-auto space-y-24">
-                        {/* How It Works Section */}
-                        <motion.div
-                            variants={sectionVariants}
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true, amount: 0.3 }} // Runs only once when it enters view
+                    <div className="flex justify-center items-center scale-90 md:scale-100 py-10">
+                        <DisplayCards
+                            cards={[
+                                {
+                                    icon: <Upload size={18} />,
+                                    title: "Upload",
+                                    description: "Upload your PDFs or raw notes.",
+                                    date: "01",
+                                    iconClassName: "text-indigo-600",
+                                    titleClassName: "text-slate-900",
+                                    className: "[grid-area:stack] hover:-translate-y-8 transition-all duration-500 shadow-md bg-white border-slate-100"
+                                },
+                                {
+                                    icon: <Zap size={18} />,
+                                    title: "AI Analysis",
+                                    description: "Contextual question extraction.",
+                                    date: "02",
+                                    iconClassName: "text-indigo-600",
+                                    titleClassName: "text-slate-900",
+                                    className: "[grid-area:stack] translate-x-12 translate-y-8 hover:-translate-y-2 transition-all duration-500 shadow-md bg-white border-slate-100"
+                                },
+                                {
+                                    icon: <Target size={18} />,
+                                    title: "Take Test",
+                                    description: "Immediate feedback & review.",
+                                    date: "03",
+                                    iconClassName: "text-indigo-600",
+                                    titleClassName: "text-slate-900",
+                                    className: "[grid-area:stack] translate-x-24 translate-y-16 hover:translate-y-8 transition-all duration-500 shadow-md bg-white border-slate-100"
+                                }
+                            ]}
+                        />
+                    </div>
+                </div>
+            </section>
+
+            {/* --- 3. BENTO GRID FEATURES --- */}
+            <section className="py-24 px-6">
+                <div className="max-w-6xl mx-auto">
+                    <div className="mb-12">
+                        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+                            Smart Features for <span className="text-indigo-600">Smart Students.</span>
+                        </h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        {/* Big Feature */}
+                        <motion.div 
+                            variants={fadeInUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
+                            className="md:col-span-2 bg-slate-900 rounded-3xl p-8 text-white relative overflow-hidden group"
                         >
-                            <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center text-white">How It Works</h2>
-                            <div className="grid md:grid-cols-3 gap-8">
-                                {[
-                                    { step: "01", title: "Upload Your PDF", description: "Simply upload your PDF document and let our AI analyze the content." },
-                                    { step: "02", title: "AI Creates Questions", description: "Our intelligent system generates relevant questions based on your content." },
-                                    { step: "03", title: "Take the Quiz", description: "Test your knowledge and get instant feedback on your performance." }
-                                ].map((step, index) => (
-                                    <motion.div
-                                        key={step.step}
-                                        custom={index * 0.2} // Pass delay to variants
-                                        variants={sectionVariants}
-                                        className="relative p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10"
-                                    >
-                                        <div className="text-4xl font-bold text-violet-500/30 mb-4">{step.step}</div>
-                                        <h3 className="text-xl font-semibold mb-4 text-white">{step.title}</h3>
-                                        <p className="text-slate-400 leading-relaxed">{step.description}</p>
-                                    </motion.div>
-                                ))}
+                            <Zap size={120} className="absolute -bottom-6 -right-6 opacity-5 text-white" />
+                            <div className="relative z-10">
+                                <div className="w-10 h-10 bg-indigo-500/20 rounded-lg flex items-center justify-center mb-6 text-indigo-400">
+                                    <MousePointer2 size={20} />
+                                </div>
+                                <h3 className="text-xl font-bold mb-3">Instant MCQ Generation</h3>
+                                <p className="text-slate-400 text-sm max-w-sm leading-relaxed">Stop spending hours making flashcards. Our AI reads your material and builds tests in under 5 seconds.</p>
                             </div>
                         </motion.div>
 
-                        {/* Final CTA Section - No border or extra space */}
-                        <motion.div
-                             variants={sectionVariants}
-                             initial="hidden"
-                             whileInView="visible"
-                             viewport={{ once: true, amount: 0.5 }}
-                             className="text-center"
+                        {/* Small Feature */}
+                        <motion.div 
+                            variants={fadeInUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
+                            className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm"
                         >
-                            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-white">Ready to Get Started?</h2>
-                            <p className="text-slate-400 mb-8 text-lg max-w-2xl mx-auto">Transform your learning experience with AI-powered quizzes today.</p>
-                            <Link
-                                to={user ? '/upload' : '/login'}
-                                className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-semibold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-105"
-                            >
-                                Get Started Now
-                                <ArrowRight className="w-4 h-4" />
-                            </Link>
+                            <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center mb-6 text-indigo-600">
+                                <BarChart3 size={20} />
+                            </div>
+                            <h3 className="text-lg font-bold mb-2 text-slate-900">Performance Metrics</h3>
+                            <p className="text-slate-500 text-sm leading-relaxed">Deep dive into your performance with automated heatmaps and scores.</p>
+                        </motion.div>
+
+                        {/* Feature 3 */}
+                        <motion.div 
+                            variants={fadeInUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
+                            className="bg-indigo-50/50 rounded-3xl p-8 border border-indigo-100 shadow-sm"
+                        >
+                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mb-6 text-indigo-600 shadow-sm">
+                                <BookOpen size={20} />
+                            </div>
+                            <h3 className="text-lg font-bold mb-2 text-slate-900">Multilingual Support</h3>
+                            <p className="text-slate-600 text-sm leading-relaxed">Upload notes in Hindi, Spanish, or English. Our AI handles it all.</p>
+                        </motion.div>
+
+                        {/* Horizontal Long Feature */}
+                        <motion.div 
+                            variants={fadeInUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
+                            className="md:col-span-2 bg-white rounded-3xl p-8 border border-slate-200 flex flex-col md:flex-row items-center gap-8 shadow-sm"
+                        >
+                            <div className="flex-1">
+                                <h3 className="text-xl font-bold mb-2 text-slate-900">Context-Aware AI</h3>
+                                <p className="text-slate-500 text-sm">We don't just pick keywords. Our AI understands medical, technical, and legal contexts to give you high-quality questions.</p>
+                            </div>
+                            <div className="px-6 py-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3">
+                                <div className="flex -space-x-2">
+                                    {[1,2,3].map(i => <div key={i} className="w-7 h-7 rounded-full bg-slate-300 border-2 border-white shadow-sm" />)}
+                                </div>
+                                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Trusted by 50k+</span>
+                            </div>
                         </motion.div>
                     </div>
-                </section>
+                </div>
+            </section>
 
-            </main>
+            {/* --- 4. CALL TO ACTION --- */}
+            <section className="py-20 px-6">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    className="max-w-4xl mx-auto bg-slate-900 rounded-[2.5rem] p-10 md:p-16 text-center text-white relative overflow-hidden"
+                >
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/10 blur-[80px]" />
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight"> Ready to ace your exams? </h2>
+                    <p className="text-slate-400 text-base mb-10 max-w-lg mx-auto leading-relaxed">
+                        Join thousands of students who have leveled up their learning game.
+                    </p>
+                    <Link
+                        to={user ? '/upload' : '/login'}
+                        className="inline-flex items-center gap-2 bg-white text-slate-900 font-bold text-base py-3.5 px-8 rounded-xl hover:bg-slate-50 transition-colors shadow-xl"
+                    >
+                        Start Creating Now
+                        <ArrowRight size={18} />
+                    </Link>
+                </motion.div>
+            </section>
+
+            {/* Footer */}
+            <footer className="py-10 border-t border-slate-100 text-center">
+                <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">
+                    © 2024 Notes2Test AI • Handcrafted for Students
+                </p>
+            </footer>
         </div>
     );
 };

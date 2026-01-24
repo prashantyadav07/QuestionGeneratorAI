@@ -25,7 +25,7 @@ const Test = () => {
                     setTopic(data.data.topic);
                     setQuestions(data.data.questions);
                 }
-            } catch (error) { console.error(error); } 
+            } catch (error) { console.error(error); }
             finally { setLoading(false); }
         };
         loadTest();
@@ -49,35 +49,35 @@ const Test = () => {
             if (resultData.success) {
                 navigate(`/results/${topicId}`, { state: { results: resultData.data } });
             }
-        } catch (error) { console.error(error); } 
+        } catch (error) { console.error(error); }
         finally { setSubmitting(false); }
     };
 
     if (loading) return <div className="flex justify-center items-center h-[calc(100vh-160px)]"><Spinner /></div>;
     if (!questions.length) return <div className="text-center p-8 text-slate-400">No questions found for this test.</div>;
-    
+
     const currentQuestion = questions[currentQuestionIndex];
     const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
     return (
-        <div className="container mx-auto max-w-3xl py-12 px-4">
-            <div className="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 p-8">
-                <div className="mb-6">
-                    <div className="flex justify-between items-center mb-2 text-sm text-slate-400">
-                        <span>Progress</span>
-                        <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
+        <div className="container mx-auto max-w-3xl py-12 px-4 min-h-[calc(100vh-160px)]">
+            <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-200 p-6 md:p-10">
+                <div className="mb-8">
+                    <div className="flex justify-between items-end mb-3">
+                        <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">Progress</span>
+                        <span className="text-sm font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">Question {currentQuestionIndex + 1} / {questions.length}</span>
                     </div>
-                    <div className="w-full bg-slate-700 rounded-full h-2.5">
-                        <motion.div 
-                            className="bg-violet-600 h-2.5 rounded-full"
+                    <div className="w-full bg-slate-100 rounded-full h-3 border border-slate-200 shadow-inner overflow-hidden">
+                        <motion.div
+                            className="bg-indigo-600 h-full rounded-full shadow-[0_0_10px_rgba(79,70,229,0.3)]"
                             animate={{ width: `${progress}%` }}
                             transition={{ duration: 0.5, ease: 'easeInOut' }}
                         />
                     </div>
                 </div>
 
-                <h1 className="text-2xl font-bold text-slate-100 mb-2">{topic.title}</h1>
-                <hr className="mb-6 border-slate-700" />
+                <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2 tracking-tight">{topic.title}</h1>
+                <hr className="mb-8 border-slate-100" />
 
                 <AnimatePresence mode="wait">
                     <motion.div
@@ -88,19 +88,22 @@ const Test = () => {
                         transition={{ duration: 0.4 }}
                         className="min-h-[250px]"
                     >
-                        <p className="text-lg font-semibold text-slate-200 mb-6">{currentQuestion.questionText}</p>
-                        
+                        <p className="text-xl font-bold text-slate-800 mb-8 leading-relaxed italic border-l-4 border-indigo-500 pl-6 py-2 bg-indigo-50/30 rounded-r-xl">"{currentQuestion.questionText}"</p>
+
                         {/* === YEH SECTION SIMPLIFY HUA HAI === */}
                         {/* Ab sirf MCQ options dikhane hain */}
                         <div className="space-y-3">
                             {currentQuestion.options.map(option => (
-                                <motion.div 
+                                <motion.div
                                     key={option}
-                                    whileHover={{ scale: 1.02 }}
+                                    whileHover={{ scale: 1.01, x: 5 }}
                                     onClick={() => handleAnswerSelect(currentQuestion._id, option)}
-                                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${userAnswers[currentQuestion._id] === option ? 'bg-violet-900/50 border-violet-500 shadow-md text-white' : 'border-slate-700 hover:border-violet-600 text-slate-300'}`}
+                                    className={`p-5 border-2 rounded-2xl cursor-pointer transition-all duration-200 group flex items-center gap-4 ${userAnswers[currentQuestion._id] === option ? 'bg-indigo-600 border-indigo-600 shadow-lg shadow-indigo-200 text-white' : 'bg-white border-slate-100 hover:border-indigo-200 text-slate-600 hover:bg-slate-50'}`}
                                 >
-                                    {option}
+                                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center font-bold text-xs ${userAnswers[currentQuestion._id] === option ? 'bg-white border-white text-indigo-600' : 'bg-slate-50 border-slate-200 text-slate-400 group-hover:border-indigo-300'}`}>
+                                        {String.fromCharCode(65 + currentQuestion.options.indexOf(option))}
+                                    </div>
+                                    <span className="flex-1 font-semibold">{option}</span>
                                 </motion.div>
                             ))}
                         </div>
@@ -109,12 +112,12 @@ const Test = () => {
                     </motion.div>
                 </AnimatePresence>
 
-                <div className="mt-8 pt-6 border-t border-slate-700 flex justify-end">
+                <div className="mt-10 pt-8 border-t border-slate-100 flex justify-end">
                     {currentQuestionIndex < questions.length - 1 ? (
-                        <button onClick={handleNext} className="bg-violet-600 text-white font-bold py-2 px-8 rounded-lg shadow-lg hover:bg-violet-700 transition-colors">Next</button>
+                        <button onClick={handleNext} className="bg-indigo-600 text-white font-bold py-3 px-10 rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:shadow-indigo-200 transition-all active:scale-95 disabled:opacity-50">Next Question</button>
                     ) : (
-                        <button onClick={handleSubmitTest} disabled={submitting} className="bg-green-600 text-white font-bold py-2 px-8 rounded-lg shadow-lg hover:bg-green-700 disabled:bg-slate-600 transition-colors">
-                            {submitting ? 'Submitting...' : 'Submit & See Results'}
+                        <button onClick={handleSubmitTest} disabled={submitting} className="bg-green-600 text-white font-bold py-3 px-10 rounded-2xl shadow-xl shadow-green-100 hover:bg-green-700 hover:shadow-green-200 transition-all active:scale-95 disabled:opacity-50">
+                            {submitting ? 'Submitting Answers...' : 'Submit & See Results'}
                         </button>
                     )}
                 </div>

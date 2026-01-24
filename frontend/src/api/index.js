@@ -1,31 +1,35 @@
+// File: frontend/src/api/index.js
+// ✅ YEH IS FILE KA POORA AUR SAHI CODE HAI
+
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-// ✅ Make sure VITE_BACKEND_URL in .env has NO trailing slash
 const api = axios.create({
     baseURL: import.meta.env.VITE_BACKEND_URL,
 });
 
-// ✅ Upload PDF and generate test
+// Function to handle PDF uploads
 export const uploadPDFAndCreateTest = (pdfFile, questionCount) => {
     const formData = new FormData();
     formData.append('pdf', pdfFile);
     formData.append('questionCount', String(questionCount));
-
-    const promise = api.post('/api/pdf/upload', formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-    });
-
-    return toast.promise(promise, {
-        loading: 'Uploading PDF and analyzing...',
-        success: (response) => response.data.message || 'Test generated successfully!',
-        error: (error) => error.response?.data?.message || 'A critical error occurred. Please try again.',
+    // Path /api se shuru hoga
+    return api.post('/api/pdf/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
     });
 };
 
-// ✅ Fetch questions for a given topic ID
+// ✅ WOH FUNCTION JO MISSING THA
+// Function to handle text/topic submissions
+export const createTestFromText = (text, questionCount) => {
+    // Path /api se shuru hoga
+    return api.post('/api/pdf/generate-from-text', {
+        text: text,
+        questionCount: String(questionCount),
+    });
+};
+
+// Function to fetch a specific test
 export const fetchTestQuestions = async (topicId) => {
     try {
         const { data } = await api.get(`/api/questions/topic/${topicId}`);
@@ -37,7 +41,7 @@ export const fetchTestQuestions = async (topicId) => {
     }
 };
 
-// ✅ Submit answers and get results
+// Function to submit test results
 export const submitAndGetResults = async (topicId, answers) => {
     try {
         const { data } = await api.post(`/api/questions/submit/${topicId}`, { answers });

@@ -1,4 +1,4 @@
-// src/App.jsx
+// File: src/App.jsx
 
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -19,22 +19,24 @@ import Results from './pages/Results';
 
 function App() {
   return (
-    // Yeh classes footer ko hamesha neeche rakhne ke liye aur dark theme ke liye hain
-    <div className="flex flex-col min-h-screen bg-[#0a0518] text-slate-200 font-sans">
+    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 font-sans">
       <Toaster 
         position="top-center"
         toastOptions={{
           style: {
-            background: '#1e293b', // slate-800
-            color: '#e2e8f0',     // slate-200
-            border: '1px solid #334155', // slate-700
+            background: '#ffffff', 
+            color: '#0f172a',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+          },
+          loading: {
+            icon: null,
           },
         }}
       />
 
       <Header />
 
-      {/* flex-grow bachi hui saari jagah le lega, taaki footer neeche rahe */}
       <main className="flex-grow w-full">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -45,7 +47,6 @@ function App() {
         </Routes>
       </main>
 
-      {/* Footer ab hamesha neeche rahega */}
       <Footer />
     </div>
   );
