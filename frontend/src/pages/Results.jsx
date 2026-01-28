@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 
 const Results = () => {
     const location = useLocation();
-    
+
     // Safety Check
     if (!location.state?.results) {
         return <Navigate to="/upload" replace />;
@@ -20,7 +20,7 @@ const Results = () => {
         { name: 'Correct', value: score },
         { name: 'Wrong', value: wrongAnswers },
     ];
-    
+
     const COLORS = ['#10b981', '#f43f5e']; // Emerald-500, Rose-500
 
     // Animation Variants
@@ -55,7 +55,7 @@ const Results = () => {
 
             <main className="max-w-5xl mx-auto px-4 pt-8">
                 {/* Hero Stats Section */}
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
@@ -63,14 +63,14 @@ const Results = () => {
                     {/* Main Score Card */}
                     <div className="md:col-span-2 bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-50" />
-                        
+
                         <div className="relative z-10 text-center md:text-left">
                             <h2 className="text-slate-500 font-semibold uppercase tracking-wider text-xs mb-2">Overall Performance</h2>
                             <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-4">
                                 {accuracy >= 80 ? 'Outstanding!' : accuracy >= 50 ? 'Good Job!' : 'Keep Learning!'}
                             </h1>
                             <p className="text-slate-600 text-lg mb-6 max-w-sm">
-                                You've completed the assessment with <span className="text-indigo-600 font-bold">{accuracy}% accuracy</span>. 
+                                You've completed the assessment with <span className="text-indigo-600 font-bold">{accuracy}% accuracy</span>.
                                 Review your answers below to improve.
                             </p>
                             <Link to="/upload" className="inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-indigo-200 transition-all hover:-translate-y-1 active:scale-95">
@@ -93,11 +93,11 @@ const Results = () => {
                                         {data.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={COLORS[index]} cornerRadius={10} />
                                         ))}
-                                        <Label 
-                                            value={`${accuracy}%`} 
-                                            position="center" 
-                                            fill="#1e293b" 
-                                            style={{ fontSize: '24px', fontWeight: '800' }} 
+                                        <Label
+                                            value={`${accuracy}%`}
+                                            position="center"
+                                            fill="#1e293b"
+                                            style={{ fontSize: '24px', fontWeight: '800' }}
                                         />
                                     </Pie>
                                 </PieChart>
@@ -136,7 +136,7 @@ const Results = () => {
                     </h3>
                 </div>
 
-                <motion.div 
+                <motion.div
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
@@ -169,16 +169,14 @@ const Results = () => {
                                             </div>
                                         </div>
 
-                                        {/* Correct Answer (Show only if wrong) */}
-                                        {!item.isCorrect && (
-                                            <div className="p-4 rounded-2xl border bg-indigo-50/50 border-indigo-100">
-                                                <p className="text-[10px] uppercase font-black tracking-widest text-indigo-400 mb-1">Correct Answer</p>
-                                                <div className="flex items-center gap-2 font-bold text-indigo-700">
-                                                    <CheckCircle2 size={18} />
-                                                    {item.correctAnswer}
-                                                </div>
+                                        {/* Correct Answer - Always Show */}
+                                        <div className="p-4 rounded-2xl border bg-indigo-50/50 border-indigo-100">
+                                            <p className="text-[10px] uppercase font-black tracking-widest text-indigo-400 mb-1">Correct Answer</p>
+                                            <div className="flex items-center gap-2 font-bold text-indigo-700">
+                                                <CheckCircle2 size={18} />
+                                                {item.correctAnswer}
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
 
                                     {/* Explanation Box */}

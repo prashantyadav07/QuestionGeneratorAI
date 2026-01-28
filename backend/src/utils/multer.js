@@ -1,12 +1,19 @@
 import multer from 'multer';
 
-// Files ko memory mein store karenge taaki unhe seedha buffer se process kiya ja sake
+// Store files in memory for immediate processing
 const storage = multer.memoryStorage();
 
 const upload = multer({ 
     storage: storage,
     limits: {
-        fileSize: 500 * 1024 * 1024 // 50 MB file size limit
+        fileSize: 50 * 1024 * 1024 // 50 MB file size limit (reasonable for PDFs)
+    },
+    fileFilter: (req, file, cb) => {
+        // Only allow PDF files
+        if (file.mimetype !== 'application/pdf') {
+            return cb(new Error('Only PDF files are allowed'));
+        }
+        cb(null, true);
     }
 });
 

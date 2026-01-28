@@ -1,224 +1,277 @@
-// Enhanced debug version of your controller
+// Enhanced PDF and Text Generation Controller
 
 import { extractTextFromPDF } from '../services/pdfParser.js';
 import { generateQuestionsInBatches } from '../services/aiService.js';
 import Topic from '../models/Topic.js';
 import Question from '../models/Question.js';
 import { splitTextIntoChunks } from '../utils/textChunker.js';
+import {
+  successResponse,
+  errorResponse,
+  getHttpStatus,
+  getErrorDetails,
+  ErrorTypes
+} from '../utils/apiResponseHelper.js';
 
-// --- PDF UPLOAD HANDLER (WITH DETAILED LOGGING) ---
+/**
+ * Validates request and extracts PDF text, then generates questions
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 export const handlePDFUpload = async (req, res) => {
-  console.log("\n--- [START] PDF UPLOAD REQUEST ---");
-  console.log("Request headers:", req.headers);
-  console.log("Request body:", req.body);
-  console.log("Request file:", req.file ? 'File present' : 'No file');
+  console.log(`\n🚀 [${new Date().toISOString()}] PDF UPLOAD REQUEST`);
 
   try {
-    // Step 1: Validate file upload
+    // Validate file presence and type
     if (!req.file) {
-      console.error("❌ Step 1 FAILED: No file in request.");
-      return res.status(400).json({
-        success: false,
-        message: 'No PDF file uploaded. Please select a PDF file.'
-      });
+      console.error("❌ No file in request");
+      const error = errorResponse(
+        ErrorTypes.FILE_ERROR,
+        'No PDF file uploaded.',
+        null,
+        ['Select a PDF file and try again']
+      );
+      return res.status(400).json(error);
     }
 
     if (req.file.mimetype !== 'application/pdf') {
-      console.error("❌ Step 1 FAILED: Invalid file type:", req.file.mimetype);
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid file type. Please upload a PDF file.'
-      });
+      console.error(`❌ Invalid file type: ${req.file.mimetype}`);
+      const error = errorResponse(
+        ErrorTypes.FILE_ERROR,
+        'Invalid file type. Only PDF files are supported.',
+        null,
+        ['Upload a PDF file', 'Convert your file to PDF format']
+      );
+      return res.status(400).json(error);
     }
 
-    console.log(`✅ Step 1: File received: ${req.file.originalname} (${req.file.size} bytes)`);
+    console.log(`✅ File received: ${req.file.originalname} (${req.file.size} bytes)`);
 
-    const requestedCount = parseInt(req.body.questionCount) || 10;
-    console.log(`📝 Requested question count: ${requestedCount}`);
+    // Parse question count
+    const questionCount = parseInt(req.body.questionCount) || 10;
+    if (questionCount < 1 || questionCount > 50) {
+      const error = errorResponse(
+        ErrorTypes.INVALID_INPUT,
+        'Question count must be between 1 and 50.',
+        null,
+        ['Choose a number between 1 and 50']
+      );
+      return res.status(400).json(error);
+    }
 
-    // Step 2: Extract text from PDF
-    console.log("⏳ Step 2: Extracting text from PDF...");
+    // Extract text from PDF
+    console.log("⏳ Extracting text from PDF...");
     let extractedText;
 
     try {
       extractedText = await extractTextFromPDF(req.file.buffer);
-    } catch (pdfError) {
-      console.error("❌ Step 2 FAILED: PDF extraction error:", pdfError.message);
-      return res.status(400).json({
-        success: false,
-        message: 'Failed to extract text from PDF. The file might be corrupted or password-protected.'
-      });
+    } catch (error) {
+      console.error(`❌ PDF extraction failed: ${error.message}`);
+      const errorResp = errorResponse(
+        ErrorTypes.FILE_ERROR,
+        'Failed to extract text from PDF.',
+        error.message,
+        [
+          'Ensure the PDF is not password-protected',
+          'Try a text-based PDF (not scanned images)',
+          'Try a different PDF file'
+        ]
+      );
+      return res.status(400).json(errorResp);
     }
 
-    if (!extractedText || extractedText.trim() === '') {
-      console.error("❌ Step 2 FAILED: No text could be extracted from the PDF.");
-      return res.status(400).json({
-        success: false,
-        message: 'Could not extract any readable text from the PDF. The PDF might be image-based or empty.'
-      });
+    if (!extractedText || extractedText.trim().length === 0) {
+      const error = errorResponse(
+        ErrorTypes.FILE_ERROR,
+        'No readable text found in PDF.',
+        null,
+        [
+          'Try a text-based PDF (not scanned images)',
+          'Check if the PDF contains actual text',
+          'Try using OCR for scanned PDFs'
+        ]
+      );
+      return res.status(400).json(error);
     }
 
-    console.log(`✅ Step 2: Text extracted successfully (${extractedText.length} characters).`);
+    console.log(`✅ Extracted ${extractedText.length} characters from PDF`);
 
-    // Step 3: Process the extracted text
+    // Process extracted text
     const mockReq = {
       body: {
         text: extractedText,
-        questionCount: requestedCount
+        questionCount: questionCount
       }
     };
 
     return await handleTextGeneration(mockReq, res);
 
   } catch (error) {
-    console.error("❌ CRITICAL ERROR in handlePDFUpload:", error);
-    console.error("Error stack:", error.stack);
-    console.log("--- [FAILED] REQUEST ENDED WITH ERROR ---");
-
-    return res.status(500).json({
-      success: false,
-      message: 'An internal server error occurred while processing the PDF.',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    console.error("❌ CRITICAL ERROR in handlePDFUpload:", error.message);
+    const errorResp = errorResponse(
+      ErrorTypes.API_ERROR,
+      'An internal error occurred while processing the PDF.',
+      error.message,
+      ['Try again', 'Contact support if the issue persists']
+    );
+    return res.status(500).json(errorResp);
   }
 };
 
-// --- TEXT GENERATION HANDLER (ENHANCED WITH MORE DEBUG) ---
+/**
+ * Generates questions from text or PDF content
+ * @param {Object} req - Express request with text and questionCount
+ * @param {Object} res - Express response object
+ */
 export const handleTextGeneration = async (req, res) => {
-  console.log("\n🚀 [START] TEXT GENERATION REQUEST");
-  console.log("📥 Request body:", JSON.stringify(req.body, null, 2));
+  console.log(`\n🚀 [${new Date().toISOString()}] TEXT GENERATION REQUEST`);
 
   const { text, questionCount } = req.body;
 
   try {
-    // Step 1: Validate input
-    console.log("⏳ Step 1: Validating input...");
-    if (!text || text.trim() === '') {
-      console.error("❌ Step 1 FAILED: No text provided");
-      return res.status(400).json({
-        success: false,
-        message: 'No text content provided for question generation.'
-      });
+    // Validate input text
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      const error = errorResponse(
+        ErrorTypes.INVALID_INPUT,
+        'No text content provided.',
+        null,
+        ['Provide text content', 'Upload a PDF file instead']
+      );
+      return res.status(400).json(error);
     }
 
-    const requestedCount = parseInt(questionCount) || 10;
-    console.log(`✅ Step 1: Input valid. Processing ${requestedCount} questions for ${text.length} characters of text`);
 
-    // Step 2: Check if required services are available
-    console.log("⏳ Step 2: Checking service availability...");
-    try {
-      console.log("🔍 Checking splitTextIntoChunks function...");
-      if (typeof splitTextIntoChunks !== 'function') {
-        throw new Error("splitTextIntoChunks is not a function");
-      }
-
-      console.log("🔍 Checking generateQuestionsInBatches function...");
-      if (typeof generateQuestionsInBatches !== 'function') {
-        throw new Error("generateQuestionsInBatches is not a function");
-      }
-
-      console.log("🔍 Checking Topic model...");
-      if (!Topic) {
-        throw new Error("Topic model is not available");
-      }
-
-      console.log("🔍 Checking Question model...");
-      if (!Question) {
-        throw new Error("Question model is not available");
-      }
-
-      console.log("✅ Step 2: All services are available");
-    } catch (serviceError) {
-      console.error("❌ Step 2 FAILED: Service check error:", serviceError.message);
-      return res.status(500).json({
-        success: false,
-        message: `Service dependency error: ${serviceError.message}`
-      });
+    const requestedCount = Math.min(parseInt(questionCount) || 10, 50);
+    if (requestedCount < 1) {
+      const error = errorResponse(
+        ErrorTypes.INVALID_INPUT,
+        'Question count must be at least 1.',
+        null,
+        ['Choose a number between 1 and 50']
+      );
+      return res.status(400).json(error);
     }
 
-    // Step 3: Split text into chunks
-    console.log("⏳ Step 3: Splitting text into chunks...");
+    console.log(`✅ Input valid. Generating ${requestedCount} questions from ${text.length} characters`);
+
+    // Split text into chunks for processing
+    console.log("⏳ Splitting text into chunks...");
     let textChunks;
 
     try {
-      textChunks = splitTextIntoChunks(text, 15000);
-    } catch (chunkError) {
-      console.error("❌ Step 3 WARNING: Text chunking error:", chunkError.message);
-      console.log("🔄 Step 3: Using fallback chunking method...");
-      // Fallback: create single chunk
+      textChunks = splitTextIntoChunks(text, 4000, 200);
+    } catch (error) {
+      console.error(`⚠️ Chunking error: ${error.message}`);
+      // Fallback: use single chunk
       textChunks = [text.substring(0, 15000)];
     }
 
-    console.log(`✅ Step 3: Text split into ${textChunks.length} chunk(s).`);
-    console.log(`📊 Chunk sizes: ${textChunks.map(chunk => chunk.length).join(', ')} characters`);
+    if (!textChunks || textChunks.length === 0) {
+      const error = errorResponse(
+        ErrorTypes.INVALID_INPUT,
+        'Failed to process text. Text may be too short.',
+        null,
+        ['Provide more text content']
+      );
+      return res.status(400).json(error);
+    }
 
-    // Step 4: Generate questions using AI
-    console.log("⏳ Step 4: Calling AI service to generate questions...");
+    console.log(`✅ Split into ${textChunks.length} chunk(s)`);
+
+    // Generate questions using AI service
+    console.log("⏳ Calling AI service to generate questions...");
+
     let results;
+    const generationStartTime = Date.now();
 
     try {
       results = await generateQuestionsInBatches(textChunks, requestedCount);
+
       if (!results || !results.questions || results.questions.length === 0) {
-        throw new Error("AI service failed to generate any valid questions.");
+        throw new Error('AI service failed to generate any questions.');
       }
-    } catch (aiError) {
-      console.error("❌ Step 4 FAILED: AI service error:", aiError.message);
-      return res.status(500).json({
-        success: false,
-        message: 'AI service failed to generate questions. Please try again later.',
-        error: process.env.NODE_ENV === 'development' ? aiError.message : undefined
-      });
+    } catch (error) {
+      console.error(`❌ AI service error: ${error.message}`);
+
+      // Use error type from AI service if available
+      const errorType = error.type || ErrorTypes.API_ERROR;
+      const details = getErrorDetails(errorType, error.message);
+
+      const errorResp = errorResponse(
+        errorType,
+        details.message,
+        error.message,
+        details.suggestions
+      );
+
+      return res.status(getHttpStatus(errorType)).json(errorResp);
     }
 
-    console.log(`✅ Step 4: AI service returned ${results.questions.length} questions.`);
+    const generationDuration = Date.now() - generationStartTime;
+    console.log(`✅ Generated ${results.questions.length} questions in ${generationDuration}ms`);
 
-    // Step 5: Save to database
-    console.log("⏳ Step 5: Saving data to database...");
+    // Save to database
+    console.log("⏳ Saving to database...");
 
     try {
       // Create topic
-      const topicData = results.topic || {
-        title: 'Generated Quiz',
-        description: 'Quiz generated from your content'
+      const topicData = {
+        title: results.topic?.title || 'Generated Quiz',
+        description: results.topic?.description || 'Auto-generated quiz from content'
       };
 
       const newTopic = new Topic(topicData);
       await newTopic.save();
-      console.log(`✅ Step 5a: Topic saved with ID: ${newTopic._id}`);
+      console.log(`✅ Saved topic: ${newTopic._id}`);
 
-      // Create questions
+      // Create questions with topic reference
       const questionsToSave = results.questions.slice(0, requestedCount).map(q => ({
-        ...q,
+        type: q.type || 'mcq',
+        questionText: q.questionText,
+        options: q.options || [],
+        answer: q.answer,
+        explanation: q.explanation,
         topic: newTopic._id
       }));
 
       const savedQuestions = await Question.insertMany(questionsToSave);
-      console.log(`✅ Step 5b: Saved ${savedQuestions.length} questions to database.`);
+      console.log(`✅ Saved ${savedQuestions.length} questions`);
 
-      return res.status(201).json({
-        success: true,
-        message: `Quiz created successfully! Generated ${savedQuestions.length} questions.`,
-        data: {
-          topic: newTopic,
-          questions: savedQuestions
+      const response = successResponse(
+        {
+          topicId: newTopic._id,
+          topicTitle: newTopic.title,
+          questionCount: savedQuestions.length,
+          totalQuestions: savedQuestions.length
         },
-      });
+        `Quiz created successfully with ${savedQuestions.length} questions.`,
+        {
+          generationTimeMs: generationDuration,
+          chunksProcessed: textChunks.length
+        }
+      );
+
+      return res.status(201).json(response);
 
     } catch (dbError) {
-      console.error("❌ Step 5 FAILED: Database error:", dbError.message);
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to save quiz to database. Please try again.',
-        error: process.env.NODE_ENV === 'development' ? dbError.message : undefined
-      });
+      console.error(`❌ Database error: ${dbError.message}`);
+      const errorResp = errorResponse(
+        ErrorTypes.DATABASE_ERROR,
+        'Failed to save quiz to database.',
+        dbError.message,
+        ['Try again', 'Contact support if the issue persists']
+      );
+      return res.status(500).json(errorResp);
     }
 
   } catch (error) {
-    console.error("❌ CRITICAL ERROR in handleTextGeneration:", error);
-    return res.status(500).json({
-      success: false,
-      message: 'An internal server error occurred during text processing.',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    console.error("❌ CRITICAL ERROR in handleTextGeneration:", error.message);
+    const errorResp = errorResponse(
+      ErrorTypes.API_ERROR,
+      'An internal error occurred.',
+      error.message,
+      ['Try again', 'Contact support if the issue persists']
+    );
+    return res.status(500).json(errorResp);
   }
 };

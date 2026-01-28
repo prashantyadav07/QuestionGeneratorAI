@@ -51,14 +51,17 @@ const Upload = () => {
 
             const response = await promise;
 
+            // Updated to handle new response format
             if (response.data.success) {
-                toast.success(`Success! ${response.data.data.questions.length} questions generated.`, { id: toastId });
-                navigate(`/test/${response.data.data.topic._id}`);
+                const { topicId, questionCount: generatedCount } = response.data.data;
+                toast.success(`Success! ${generatedCount} questions generated.`, { id: toastId });
+                navigate(`/test/${topicId}`);
             } else {
-                throw new Error(response.data.message || 'Failed to generate the quiz.');
+                throw new Error(response.data.error?.message || 'Failed to generate the quiz.');
             }
         } catch (error) {
-            toast.error(error.message || "An unknown error occurred.", { id: toastId });
+            const errorMsg = error.response?.data?.error?.message || error.message || "An unknown error occurred.";
+            toast.error(errorMsg, { id: toastId });
         } finally {
             setIsLoading(false);
         }
@@ -79,8 +82,8 @@ const Upload = () => {
             >
                 {/* Header Section */}
                 <div className="text-center mb-10">
-                    <motion.div 
-                        initial={{ scale: 0.8 }} 
+                    <motion.div
+                        initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
                         className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-sm font-bold mb-4"
                     >
@@ -96,26 +99,26 @@ const Upload = () => {
 
                 {/* Main Card */}
                 <div className="bg-white/80 backdrop-blur-2xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[2.5rem] p-4 md:p-10 overflow-hidden">
-                    
+
                     {/* Custom Animated Tab Switcher */}
                     <div className="relative flex bg-slate-100/50 p-1.5 rounded-2xl mb-10 w-full max-w-md mx-auto">
                         {/* Sliding Background */}
                         <motion.div
                             className="absolute top-1.5 bottom-1.5 left-1.5 bg-white rounded-xl shadow-sm border border-slate-200"
-                            animate={{ 
+                            animate={{
                                 x: activeTab === 'pdf' ? '0%' : '100%',
                                 width: 'calc(50% - 3px)'
                             }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         />
-                        <button 
-                            onClick={() => setActiveTab('pdf')} 
+                        <button
+                            onClick={() => setActiveTab('pdf')}
                             className={`relative z-10 flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center gap-2 ${activeTab === 'pdf' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
                         >
                             <FileText size={18} /> Upload PDF
                         </button>
-                        <button 
-                            onClick={() => setActiveTab('text')} 
+                        <button
+                            onClick={() => setActiveTab('text')}
                             className={`relative z-10 flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center gap-2 ${activeTab === 'text' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
                         >
                             <PenSquare size={18} /> Paste Text
@@ -140,7 +143,7 @@ const Upload = () => {
                                             {file ? 'Document Loaded' : 'Select study material'}
                                         </h3>
                                         <p className="text-slate-400 text-sm mb-4">Click to browse or drag and drop PDF</p>
-                                        
+
                                         {file && (
                                             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="flex items-center justify-center gap-2 text-indigo-700 bg-indigo-50 py-2.5 px-5 rounded-xl inline-flex font-bold text-sm">
                                                 <FileText size={16} /> {file.name}
@@ -211,7 +214,7 @@ const Upload = () => {
                     </form>
                 </div>
 
-               
+
             </motion.div>
         </div>
     );
